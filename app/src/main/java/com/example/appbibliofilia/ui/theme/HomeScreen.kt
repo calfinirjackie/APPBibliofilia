@@ -20,7 +20,7 @@ import androidx.compose.material3.TopAppBar
 fun HomeScreen(){
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Mi App Kotlin")})
+            TopAppBar(title = { Text("BIBLIOFILIA")})
         }
     ) { innerPadding ->
         Column(
@@ -30,7 +30,7 @@ fun HomeScreen(){
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(text = "¡Welcome!")
+            Text(text = "¡Donde tus libros encuentran su biblihogar!")
             Button(onClick = { /* accion futura */}) {
                 Text("Push me")
             }
