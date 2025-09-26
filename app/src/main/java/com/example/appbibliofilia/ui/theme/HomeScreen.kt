@@ -2,61 +2,102 @@ package com.example.appbibliofilia.ui.theme
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.appbibliofilia.R
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.appbibliofilia.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(){
+fun HomeScreen() {
+    /* Variables de estado declaradas dentro del @Composable*/
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("BIBLIOFILIA")},
+                title = { Text("BIBLIOFILIA") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
-                ))
+                )
+            )
         }
-    ) { Padding ->
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(Padding)
+                .padding(padding)
                 .fillMaxSize()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            /* Texto introductorio*/
             Text(text = "¡Donde tus libros encuentran su biblihogar!")
-            Button(onClick = { /* accion futura */}) {
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                Text("Explorar Libros")
-                style = MaterialTheme.typography.headlineMedium
-                color = MaterialTheme.colorScheme.onBackground
-            )
 
-         }
-
+            /* Imagen del logo*/
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo Bibliofilia",
                 modifier = Modifier.size(120.dp)
-
             )
+
+            /* Formulario de inicio de sesión */
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Usuario") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Button(
+                onClick = {
+                    if (username.isBlank() || password.isBlank()) {
+                        errorMessage = "Por favor completa todos los campos"
+                    } else {
+                        errorMessage = ""
+                        /* Aquí iría la lógica de autenticación o navegación*/
+                        println("Iniciando sesión con $username / $password")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Iniciar Sesión")
+            }
+
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            /* Botón original*/
+            Button(onClick = { /* acción futura */ }) {
+                Text("Explorar Libros")
+            }
         }
     }
 }
