@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -16,19 +17,21 @@ import com.example.appbibliofilia.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
-    /* Variables de estado declaradas dentro del @Composable*/
+fun HomeScreen(onRegisterClick: () -> Unit = {}) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
+
+    // 💚 Definimos el color verde menta
+    val mintGreen = Color(0xFFD2EDDB)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("BIBLIOFILIA") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = mintGreen,
+                    titleContentColor = Color.Black // color del texto del título
                 )
             )
         }
@@ -41,17 +44,18 @@ fun HomeScreen() {
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            /* Texto introductorio*/
-            Text(text = "¡Donde tus libros encuentran su biblihogar!")
+            Text(
+                text = "¡Donde tus libros encuentran su biblihogar!",
+                color = MaterialTheme.colorScheme.onBackground
+            )
 
-            /* Imagen del logo*/
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo Bibliofilia",
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier.size(180.dp)
             )
 
-            /* Formulario de inicio de sesión */
+            // Campos de texto
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
@@ -68,19 +72,20 @@ fun HomeScreen() {
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // 💚 Botón de inicio de sesión con color verde menta
             Button(
                 onClick = {
                     if (username.isBlank() || password.isBlank()) {
                         errorMessage = "Por favor completa todos los campos"
                     } else {
                         errorMessage = ""
-                        /* Aquí iría la lógica de autenticación o navegación*/
                         println("Iniciando sesión con $username / $password")
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = mintGreen,
+                    contentColor = Color.Black // color del texto del botón
                 )
             ) {
                 Text("Iniciar Sesión")
@@ -94,9 +99,16 @@ fun HomeScreen() {
                 )
             }
 
-            /* Botón original*/
-            Button(onClick = { /* acción futura */ }) {
-                Text("Explorar Libros")
+            // 💚 Botón original también en verde menta
+            Button(
+                onClick = { onRegisterClick() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = mintGreen,
+                    contentColor = Color.Black
+                )
+            ) {
+                Text("Register")
             }
         }
     }
