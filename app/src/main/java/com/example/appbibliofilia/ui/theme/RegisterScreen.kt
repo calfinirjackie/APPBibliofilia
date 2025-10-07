@@ -21,7 +21,7 @@ import java.util.*
 @Composable
 fun RegisterScreen(onBackClick: () -> Unit) {
 
-    // ✅ Variables de estado
+
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -30,7 +30,7 @@ fun RegisterScreen(onBackClick: () -> Unit) {
     val mintGreen = Color(0xFFD2EDDB)
     val context = LocalContext.current
 
-    // ✅ Configuración del DatePickerDialog
+
     val calendar = Calendar.getInstance()
     val year = calendar.get(Calendar.YEAR)
     val month = calendar.get(Calendar.MONTH)
@@ -89,7 +89,7 @@ fun RegisterScreen(onBackClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // ✅ Campo de fecha de nacimiento
+
             OutlinedTextField(
                 value = birthDate,
                 onValueChange = {},

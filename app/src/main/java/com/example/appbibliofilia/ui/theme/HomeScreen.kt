@@ -22,7 +22,6 @@ fun HomeScreen(onRegisterClick: () -> Unit = {}) {
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
-    // 💚 Definimos el color verde menta
     val mintGreen = Color(0xFFD2EDDB)
 
     Scaffold(
@@ -55,7 +54,7 @@ fun HomeScreen(onRegisterClick: () -> Unit = {}) {
                 modifier = Modifier.size(180.dp)
             )
 
-            // Campos de texto
+
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
@@ -72,7 +71,7 @@ fun HomeScreen(onRegisterClick: () -> Unit = {}) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // 💚 Botón de inicio de sesión con color verde menta
+
             Button(
                 onClick = {
                     if (username.isBlank() || password.isBlank()) {
@@ -85,7 +84,7 @@ fun HomeScreen(onRegisterClick: () -> Unit = {}) {
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = mintGreen,
-                    contentColor = Color.Black // color del texto del botón
+                    contentColor = Color.Black
                 )
             ) {
                 Text("Iniciar Sesión")
@@ -99,7 +98,7 @@ fun HomeScreen(onRegisterClick: () -> Unit = {}) {
                 )
             }
 
-            // 💚 Botón original también en verde menta
+
             Button(
                 onClick = { onRegisterClick() },
                 modifier = Modifier.fillMaxWidth(),

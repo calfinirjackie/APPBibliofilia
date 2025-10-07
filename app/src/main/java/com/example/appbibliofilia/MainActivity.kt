@@ -3,30 +3,26 @@ package com.example.appbibliofilia
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.appbibliofilia.ui.theme.APPBibliofiliaTheme
 import com.example.appbibliofilia.ui.theme.HomeScreen
+import com.example.appbibliofilia.ui.theme.RegisterScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             APPBibliofiliaTheme {
-                Surface (
-                    color = MaterialTheme.colorScheme.background
-                )
-                {
-                    HomeScreen()
+                Surface(color = MaterialTheme.colorScheme.background) {
+
+                    val navController = rememberNavController()
+                    AppNavigation(navController)
                 }
             }
         }
@@ -34,17 +30,18 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "$name!",
-        modifier = modifier
-    )
-}
+fun AppNavigation(navController: NavHostController) {
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    APPBibliofiliaTheme {
-        Greeting("Bibliofilia")
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") {
+            HomeScreen(
+                onRegisterClick = { navController.navigate("register") }
+            )
+        }
+        composable("register") {
+            RegisterScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
     }
 }
