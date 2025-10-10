@@ -25,7 +25,7 @@ fun RegisterScreen(onBackClick: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var birthDate by remember { mutableStateOf("") } // 👈 Asegúrate de que esté aquí
+    var birthDate by remember { mutableStateOf("") }
 
     val mintGreen = Color(0xFFD2EDDB)
     val context = LocalContext.current

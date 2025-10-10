@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.appbibliofilia.ui.theme.APPBibliofiliaTheme
 import com.example.appbibliofilia.ui.theme.HomeScreen
 import com.example.appbibliofilia.ui.theme.RegisterScreen
+import com.example.appbibliofilia.ui.theme.LoadingScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,17 +32,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = "loading") {
 
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") {
-            HomeScreen(
-                onRegisterClick = { navController.navigate("register") }
-            )
+
+        composable("loading") {
+            LoadingScreen(onTimeout = {
+                navController.navigate("home") {
+                    popUpTo("loading") { inclusive = true }
+                }
+            })
         }
+
+
+        composable("home") {
+            HomeScreen(onRegisterClick = { navController.navigate("register") })
+        }
+
+
         composable("register") {
-            RegisterScreen(
-                onBackClick = { navController.popBackStack() }
-            )
+            RegisterScreen(onBackClick = { navController.popBackStack() })
         }
     }
 }
+
