@@ -5,6 +5,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,7 +27,6 @@ fun LoadingScreen(onTimeout: () -> Unit) {
 
     val context = LocalContext.current
 
-
     val imageLoader = ImageLoader.Builder(context)
         .components {
             if (android.os.Build.VERSION.SDK_INT >= 28) {
@@ -37,11 +37,12 @@ fun LoadingScreen(onTimeout: () -> Unit) {
         }
         .build()
 
-
+    // 🔹 Surface con fondo negro
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(0.dp)
+            .padding(0.dp),
+        color = Color.Black
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

@@ -21,7 +21,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             APPBibliofiliaTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
-
                     val navController = rememberNavController()
                     AppNavigation(navController)
                 }
@@ -34,7 +33,7 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "loading") {
 
-
+        // 🔹 Pantalla de carga inicial
         composable("loading") {
             LoadingScreen(onTimeout = {
                 navController.navigate("home") {
@@ -43,15 +42,23 @@ fun AppNavigation(navController: NavHostController) {
             })
         }
 
-
+        // 🔹 Pantalla principal (Home)
         composable("home") {
-            HomeScreen(onRegisterClick = { navController.navigate("register") })
+            HomeScreen(
+                onRegisterClick = { navController.navigate("register") }
+            )
         }
 
-
+        // 🔹 Pantalla de registro con navegación de retorno
         composable("register") {
-            RegisterScreen(onBackClick = { navController.popBackStack() })
+            RegisterScreen(
+                onBackClick = { navController.popBackStack() },
+                onRegisterSuccess = {
+                    navController.navigate("home") {
+                        popUpTo("register") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
-
