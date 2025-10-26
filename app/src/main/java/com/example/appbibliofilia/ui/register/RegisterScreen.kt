@@ -1,28 +1,42 @@
-package com.example.appbibliofilia.ui.theme
+package com.example.appbibliofilia.ui.register
 
 import android.app.DatePickerDialog
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.platform.LocalDensity
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     onBackClick: () -> Unit,
-    onRegisterSuccess: () -> Unit
+    onRegisterSuccess: (name: String?, email: String?) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -39,37 +53,74 @@ fun RegisterScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Haptic feedback para vibración en caso de errores de validación (sutil)
+    val haptic = LocalHapticFeedback.current
+
+    // Vibrator para una vibración más fuerte y controlada
+    val vibrator = remember { context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator }
+
+    // Animación de shake: offset horizontal en pixeles
+    val density = LocalDensity.current
+    val shakeOffset = remember { Animatable(0f) }
+    var shakeTrigger by remember { mutableStateOf(0) }
+
+    fun vibrateStrong() {
+        vibrator?.let { v ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                try {
+                    // patrón: pausa 0, vibrar 100, pausa 30, vibrar 120
+                    val timings = longArrayOf(0, 100, 30, 120)
+                    val amplitudes = intArrayOf(0, 255, 0, 255)
+                    val effect = VibrationEffect.createWaveform(timings, amplitudes, -1)
+                    v.vibrate(effect)
+                } catch (e: Throwable) {
+                    // fallback
+                    try {
+                        v.vibrate(300)
+                    } catch (_: Throwable) {
+                    }
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                v.vibrate(300)
+            }
+        }
+    }
+
+    // instancia del ViewModel para validaciones
+    val registerViewModel: RegisterViewModel = viewModel()
+
     val calendar = Calendar.getInstance()
     val year = calendar.get(Calendar.YEAR)
     val month = calendar.get(Calendar.MONTH)
     val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-    // 📅 DatePicker con validaciones realistas
+    // lanzar animación de shake cuando cambie el trigger
+    LaunchedEffect(shakeTrigger) {
+        if (shakeTrigger <= 0) return@LaunchedEffect
+        val px = with(density) { 12.dp.toPx() }
+        repeat(4) { i ->
+            val target = if (i % 2 == 0) px else -px
+            shakeOffset.animateTo(target, animationSpec = tween(durationMillis = 60))
+        }
+        shakeOffset.animateTo(0f, animationSpec = tween(durationMillis = 60))
+    }
+
+    // 📅 DatePicker con validaciones delegadas al ViewModel
     val datePickerDialog = DatePickerDialog(
         context,
         { _, selectedYear, selectedMonth, selectedDay ->
-            val selectedDate = Calendar.getInstance()
-            selectedDate.set(selectedYear, selectedMonth, selectedDay)
-            val today = Calendar.getInstance()
-            val age = today.get(Calendar.YEAR) - selectedYear
-
-            when {
-                selectedDate.after(today) -> {
-                    birthDateError = "No puedes seleccionar una fecha futura"
-                    birthDate = ""
-                }
-                age < 10 -> {
-                    birthDateError = "Debes tener al menos 10 años"
-                    birthDate = ""
-                }
-                age > 100 -> {
-                    birthDateError = "Fecha no válida (mayor de 100 años)"
-                    birthDate = ""
-                }
-                else -> {
-                    birthDateError = ""
-                    birthDate = String.format("%02d/%02d/%d", selectedDay, selectedMonth + 1, selectedYear)
-                }
+            val err = registerViewModel.validateBirthDateComponents(selectedYear, selectedMonth, selectedDay)
+            if (err.isNotEmpty()) {
+                birthDateError = err
+                birthDate = ""
+                // vibrar al marcar error de fecha: haptic + fuerte + shake
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                vibrateStrong()
+                shakeTrigger++
+            } else {
+                birthDateError = ""
+                birthDate = registerViewModel.formatDate(selectedDay, selectedMonth, selectedYear)
             }
         },
         year, month, day
@@ -85,7 +136,7 @@ fun RegisterScreen(
                 navigationIcon = {
                     IconButton(onClick = { onBackClick() }) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
                             tint = Color.Black
                         )
@@ -101,6 +152,7 @@ fun RegisterScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
+                .offset { IntOffset(shakeOffset.value.roundToInt(), 0) }
                 .fillMaxSize()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -173,30 +225,32 @@ fun RegisterScreen(
             // Botón Registrar
             Button(
                 onClick = {
-                    var valid = true
+                    // delegar validaciones al ViewModel
+                    val validation = registerViewModel.validateAll(name, email, password, birthDate)
+                    nameError = validation.nameError
+                    emailError = validation.emailError
+                    passwordError = validation.passwordError
+                    birthDateError = validation.birthDateError
 
-                    if (name.isBlank()) {
-                        nameError = "El nombre no puede estar vacío"
-                        valid = false
-                    }
-                    if (email.isBlank() || !email.contains("@")) {
-                        emailError = "Correo inválido"
-                        valid = false
-                    }
-                    if (birthDate.isBlank()) {
-                        birthDateError = "Selecciona una fecha válida"
-                        valid = false
-                    }
-                    if (password.length < 6) {
-                        passwordError = "La contraseña debe tener al menos 6 caracteres"
-                        valid = false
-                    }
-
-                    if (valid) {
+                    if (validation.isValid) {
                         scope.launch {
-                            snackbarHostState.showSnackbar("Registro exitoso 🎉")
+                            delay(1000)
+                            val snackbarJob = launch {
+                                snackbarHostState.showSnackbar(
+                                    "Registro exitoso 🎉",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                            delay(1000)
+                            snackbarJob.cancel()
+                            // pasamos name y email al onRegisterSuccess
+                            onRegisterSuccess(name, email)
                         }
-                        onRegisterSuccess()
+                    } else {
+                        // si hay errores, producir vibración fuerte y animación shake
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        vibrateStrong()
+                        shakeTrigger++
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -214,5 +268,5 @@ fun RegisterScreen(
 @Preview(showBackground = true)
 @Composable
 fun RegisterScreenPreview() {
-    RegisterScreen(onBackClick = {}, onRegisterSuccess = {})
+    RegisterScreen(onBackClick = {}, onRegisterSuccess = { _, _ -> })
 }

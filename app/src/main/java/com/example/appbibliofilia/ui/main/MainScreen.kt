@@ -1,29 +1,31 @@
-package com.example.appbibliofilia.ui.theme
+package com.example.appbibliofilia.ui.main
 
-import androidx.compose.foundation.Image
+import android.util.Log
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 @Composable
-fun MainScreen() {
+fun MainScreen(isLoggedIn: Boolean = false, userName: String? = null, onLogout: (() -> Unit)? = null) {
     val scrollState = rememberScrollState()
 
     Surface(
@@ -36,10 +38,9 @@ fun MainScreen() {
                 .verticalScroll(scrollState)
                 .fillMaxSize()
         ) {
-            HeaderSection()
+            HeaderSection(isLoggedIn = isLoggedIn, userName = userName, onLogout = onLogout)
             HeroSection()
             HowItWorksSection()
-            SignupSection()
             FAQSection()
             FooterSection()
         }
@@ -47,7 +48,36 @@ fun MainScreen() {
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(isLoggedIn: Boolean = false, userName: String? = null, onLogout: (() -> Unit)? = null) {
+    val shouldShowGreeting = isLoggedIn && !userName.isNullOrBlank()
+
+    // bandera local para controlar la visibilidad y forzar la animación al montar
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(shouldShowGreeting) {
+        Log.d("MainScreen", "LaunchedEffect shouldShowGreeting=$shouldShowGreeting")
+        if (shouldShowGreeting) {
+            visible = false
+            Log.d("MainScreen", "set visible=false")
+            delay(500) // retraso corto para forzar el toggle
+            visible = true
+            Log.d("MainScreen", "set visible=true")
+        } else {
+            visible = false
+            Log.d("MainScreen", "set visible=false (shouldShowGreeting=false)")
+        }
+    }
+
+    // animaciones explícitas
+    val greetingAlpha by animateFloatAsState(targetValue = if (visible) 1f else 0f, animationSpec = tween(durationMillis = 1000))
+    val greetingOffsetY by animateDpAsState(targetValue = if (visible) 0.dp else 12.dp, animationSpec = tween(durationMillis = 1000))
+    val greetingScale by animateFloatAsState(targetValue = if (visible) 1f else 0.98f, animationSpec = tween(durationMillis = 1000))
+
+    // Loguear alpha para ver la transición
+    LaunchedEffect(greetingAlpha) {
+        Log.d("MainScreen", "greetingAlpha=$greetingAlpha visible=$visible shouldShowGreeting=$shouldShowGreeting")
+    }
+
     Surface(
         color = Color(0xFFFFF7F0),
         tonalElevation = 4.dp,
@@ -60,24 +90,57 @@ fun HeaderSection() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = "Bibliofilia",
-                style = TextStyle(
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2B2B2B)
+            // Greeting block (animado)
+            val showGreetingBlock = visible || greetingAlpha > 0.01f
+            if (showGreetingBlock && !userName.isNullOrBlank()) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .graphicsLayer { alpha = greetingAlpha; scaleX = greetingScale; scaleY = greetingScale }
+                        .offset(y = greetingOffsetY)
+                ) {
+                    Text(
+                        text = "Hola, ${userName}",
+                        style = TextStyle(
+                            fontFamily = FontFamily.Serif,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2B2B2B)
+                        )
+                    )
+                    Text(
+                        text = "Bienvenido a tu biblihogar",
+                        style = TextStyle(
+                            fontFamily = FontFamily.SansSerif,
+                            fontSize = 14.sp,
+                            color = Color(0xFF5A5A5A)
+                        )
+                    )
+                }
+            } else {
+                // título por defecto
+                Text(
+                    text = "Bibliofilia",
+                    style = TextStyle(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2B2B2B)
+                    )
                 )
-            )
-            Button(
-                onClick = { /* TODO: Navegar a registro o login */ },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFBFE3D0),
-                    contentColor = Color(0xFF2B2B2B)
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text("Comenzar")
+            }
+
+            if (isLoggedIn) {
+                Button(
+                    onClick = { onLogout?.invoke() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFD6D6),
+                        contentColor = Color(0xFF2B2B2B)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Cerrar sesión")
+                }
             }
         }
     }
@@ -189,63 +252,6 @@ fun HowItWorksSection() {
 }
 
 @Composable
-fun SignupSection() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFF9F9FF))
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            "Únete a Bibliofilia",
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.Bold,
-            fontSize = 26.sp,
-            color = Color(0xFF2B2B2B)
-        )
-        Spacer(Modifier.height(16.dp))
-
-        var name by remember { mutableStateOf("") }
-        var email by remember { mutableStateOf("") }
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Nombre completo") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFBFE3D0),
-                unfocusedBorderColor = Color(0xFFBFE3D0)
-            )
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Correo electrónico") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFBFE3D0),
-                unfocusedBorderColor = Color(0xFFBFE3D0)
-            )
-        )
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = { /* TODO: acción de envío */ },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBFE3D0)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Registrarme", color = Color(0xFF2B2B2B), fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
 fun FAQSection() {
     Column(
         modifier = Modifier
@@ -307,10 +313,10 @@ fun FooterSection() {
 @Preview(
     showBackground = true,
     showSystemUi = true,
-    name = "Vista previa - Pantalla Principal"
+    name = "Vista previa - Pantalla Principal (logueado)"
 )
 @Composable
 fun MainScreenPreview() {
-    MainScreen()
+    MainScreen(isLoggedIn = true, userName = "Alice López")
 }
 

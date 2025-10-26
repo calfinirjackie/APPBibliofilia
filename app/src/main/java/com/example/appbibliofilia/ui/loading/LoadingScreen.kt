@@ -1,4 +1,4 @@
-package com.example.appbibliofilia.ui.theme
+package com.example.appbibliofilia.ui.loading
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
@@ -66,3 +66,4 @@ fun LoadingScreen(onTimeout: () -> Unit) {
 fun LoadingScreenPreview() {
     LoadingScreen(onTimeout = {})
 }
+
