@@ -1,0 +1,208 @@
+package com.example.appbibliofilia.ui.main
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BooksCrudScreen(viewModel: BooksViewModel = viewModel(), onBack: () -> Unit = {}) {
+    var name by remember { mutableStateOf(TextFieldValue("")) }
+    var author by remember { mutableStateOf(TextFieldValue("")) }
+    var selectedFormat by remember { mutableStateOf<BookFormat?>(null) }
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    val editingId = viewModel.editingId
+
+    LaunchedEffect(editingId) {
+        if (editingId != null) {
+            viewModel.getBook(editingId)?.let { b ->
+                name = TextFieldValue(b.name)
+                author = TextFieldValue(b.author)
+                selectedFormat = b.format
+            }
+        } else {
+            name = TextFieldValue("")
+            author = TextFieldValue("")
+            selectedFormat = null
+            dropdownExpanded = false
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("CRUD de Libros") },
+                navigationIcon = {
+                    IconButton(onClick = { onBack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.Black
+                        )
+                    }
+                }
+            )
+        },
+        content = { padding ->
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .background(Color(0xFFFFF7F0)),
+                verticalArrangement = Arrangement.Top
+            ) {
+                Text("Formulario", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nombre del Libro") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = author,
+                    onValueChange = { author = it },
+                    label = { Text("Autor") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+
+                // Dropdown para formato: usar Box + menu anclado para garantizar que flecha y campo respondan
+                Box {
+                    OutlinedTextField(
+                        value = selectedFormat?.let { if (it == BookFormat.FISICO) "Físico" else "Digital" } ?: "",
+                        onValueChange = {},
+                        label = { Text("Formato") },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { dropdownExpanded = !dropdownExpanded }) {
+                                Icon(
+                                    imageVector = Icons.Filled.ArrowDropDown,
+                                    contentDescription = if (dropdownExpanded) "Cerrar formato" else "Abrir formato"
+                                )
+                            }
+                        }
+                    )
+
+                    DropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        DropdownMenuItem(text = { Text("Físico") }, onClick = {
+                            selectedFormat = BookFormat.FISICO
+                            dropdownExpanded = false
+                        })
+                        DropdownMenuItem(text = { Text("Digital") }, onClick = {
+                            selectedFormat = BookFormat.DIGITAL
+                            dropdownExpanded = false
+                        })
+                    }
+
+                    // También permitir abrir el menú al pulsar el campo completo (no solo la flecha)
+                    Spacer(modifier = Modifier
+                        .matchParentSize()
+                        .clickable(onClick = { dropdownExpanded = !dropdownExpanded }))
+                }
+
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = {
+                        val fmt = selectedFormat ?: BookFormat.FISICO
+                        if (editingId != null) {
+                            viewModel.updateBook(editingId, name.text.trim(), author.text.trim(), fmt)
+                            viewModel.stopEditing()
+                        } else {
+                            viewModel.addBook(name.text.trim(), author.text.trim(), fmt)
+                        }
+                        // limpiar
+                        name = TextFieldValue("")
+                        author = TextFieldValue("")
+                        selectedFormat = null
+                    }, enabled = name.text.isNotBlank() && author.text.isNotBlank()) {
+                        Text(if (editingId != null) "Actualizar" else "Agregar")
+                    }
+
+                    OutlinedButton(onClick = {
+                        name = TextFieldValue("")
+                        author = TextFieldValue("")
+                        selectedFormat = null
+                        viewModel.stopEditing()
+                    }) {
+                        Text("Limpiar")
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Text("Libros", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(8.dp))
+                HorizontalDivider()
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(viewModel.books, key = { it.id }) { book ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F8))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(book.name, fontWeight = FontWeight.Bold)
+                                    Text("Autor: ${book.author}", color = Color(0xFF5A5A5A))
+                                    Text("Formato: ${if (book.format == BookFormat.FISICO) "Físico" else "Digital"}",
+                                        color = Color(0xFF5A5A5A))
+                                }
+                                Row {
+                                    IconButton(onClick = { viewModel.startEditing(book.id) }) {
+                                        Icon(Icons.Filled.Edit, contentDescription = "Editar")
+                                    }
+                                    IconButton(onClick = { viewModel.deleteBook(book.id) }) {
+                                        Icon(Icons.Filled.Delete, contentDescription = "Eliminar")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BooksCrudScreenPreview() {
+    // Llamar sin pasar ViewModel - preview usará viewModel() internamente
+    BooksCrudScreen()
+}

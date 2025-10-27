@@ -24,6 +24,7 @@ import com.example.appbibliofilia.ui.home.HomeScreen
 import com.example.appbibliofilia.ui.register.RegisterScreen
 import com.example.appbibliofilia.ui.loading.LoadingScreen
 import com.example.appbibliofilia.ui.main.MainScreen
+import com.example.appbibliofilia.ui.main.BooksCrudScreen
 import com.example.appbibliofilia.data.local.SessionRepository
 import com.example.appbibliofilia.data.repository.UsersRepository
 import com.example.appbibliofilia.ui.viewmodel.MainViewModel
@@ -107,7 +108,7 @@ fun AppNavigation(navController: NavHostController, appViewModel: MainViewModel 
                     popUpTo("main") { inclusive = true }
                     launchSingleTop = true
                 }
-            })
+            }, onOpenBooks = { navController.navigate("books") })
         }
 
         // 🔹 Pantalla de registro con navegación de retorno
@@ -123,6 +124,11 @@ fun AppNavigation(navController: NavHostController, appViewModel: MainViewModel 
                     }
                 }
             )
+        }
+
+        // Nueva ruta para el CRUD de libros
+        composable("books") {
+            BooksCrudScreen(onBack = { navController.popBackStack() })
         }
     }
 }

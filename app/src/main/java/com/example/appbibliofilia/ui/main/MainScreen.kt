@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 @Composable
-fun MainScreen(isLoggedIn: Boolean = false, userName: String? = null, onLogout: (() -> Unit)? = null) {
+fun MainScreen(isLoggedIn: Boolean = false, userName: String? = null, onLogout: (() -> Unit)? = null, onOpenBooks: (() -> Unit)? = null) {
     val scrollState = rememberScrollState()
 
     Surface(
@@ -39,7 +39,7 @@ fun MainScreen(isLoggedIn: Boolean = false, userName: String? = null, onLogout: 
                 .fillMaxSize()
         ) {
             HeaderSection(isLoggedIn = isLoggedIn, userName = userName, onLogout = onLogout)
-            HeroSection()
+            HeroSection(onOpenBooks = onOpenBooks)
             HowItWorksSection()
             FAQSection()
             FooterSection()
@@ -109,7 +109,7 @@ fun HeaderSection(isLoggedIn: Boolean = false, userName: String? = null, onLogou
                         )
                     )
                     Text(
-                        text = "Bienvenido a tu biblihogar",
+                        text = "Bienvenido a tu Biblihogar",
                         style = TextStyle(
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 14.sp,
@@ -147,7 +147,7 @@ fun HeaderSection(isLoggedIn: Boolean = false, userName: String? = null, onLogou
 }
 
 @Composable
-fun HeroSection() {
+fun HeroSection(onOpenBooks: (() -> Unit)? = null) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -156,7 +156,7 @@ fun HeroSection() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Tu mundo de libros en un solo lugar 📚",
+            text = "Tus colecciones y progresos de lectura en un solo lugar 📚",
             style = TextStyle(
                 fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.Bold,
@@ -168,7 +168,7 @@ fun HeroSection() {
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "Explora, guarda y comparte tus lecturas favoritas con la comunidad de lectores.",
+            text = "Registra lo que lees, prioriza lo que viene y cierra más libros cada mes.",
             style = TextStyle(
                 fontFamily = FontFamily.SansSerif,
                 fontSize = 16.sp,
@@ -178,15 +178,27 @@ fun HeroSection() {
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = { /* TODO */ },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFBFE3D0),
-                contentColor = Color(0xFF2B2B2B)
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Descubrir Libros")
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(
+                onClick = { /* TODO */ },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFBFE3D0),
+                    contentColor = Color(0xFF2B2B2B)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Escríbenos")
+            }
+            Button(
+                onClick = { onOpenBooks?.invoke() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFBFE3D0),
+                    contentColor = Color(0xFF2B2B2B)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Mis libros")
+            }
         }
     }
 }
@@ -210,7 +222,15 @@ fun HowItWorksSection() {
             )
         )
         Spacer(Modifier.height(24.dp))
-        repeat(3) { index ->
+        // Cuatro tarjetas distintas con número dentro de círculo mint
+        val cards = listOf(
+            Pair("Información del libro actual", "Libro físico o digital, páginas de progreso, colección a la que pertenece"),
+            Pair("Timer de lectura", "Sesiones con temporizador que grabarán tus progresos."),
+            Pair("Registro de libros leídos", "Historial, reportes, tus opiniones, notas y objetivos de lectura."),
+            Pair("Colecciones", "Sagas, géneros, autores, categoriza por libros físicos o digitales.")
+        )
+
+        cards.forEachIndexed { index, item ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -225,13 +245,23 @@ fun HowItWorksSection() {
                     Box(
                         modifier = Modifier
                             .size(60.dp)
-                            .background(Color(0xFFBFE3D0), RoundedCornerShape(50))
+                            .background(Color(0xFFBFE3D0), RoundedCornerShape(50)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // TODO: Ícono o imagen
+                        Text(
+                            text = "${index + 1}",
+                            style = TextStyle(
+                                fontFamily = FontFamily.Serif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                color = Color(0xFF2B2B2B),
+                                textAlign = TextAlign.Center
+                            )
+                        )
                     }
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Paso ${index + 1}",
+                        text = item.first,
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
@@ -239,7 +269,7 @@ fun HowItWorksSection() {
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = "Descripción del paso ${index + 1} con detalles breves sobre el proceso.",
+                        text = item.second,
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 14.sp,
                         color = Color(0xFF5A5A5A),
@@ -248,6 +278,7 @@ fun HowItWorksSection() {
                 }
             }
         }
+
     }
 }
 
@@ -262,10 +293,12 @@ fun FAQSection() {
     ) {
         Text(
             text = "Preguntas Frecuentes",
-            fontFamily = FontFamily.Serif,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF2B2B2B)
+            style = TextStyle(
+                fontFamily = FontFamily.Serif,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2B2B2B)
+            )
         )
         Spacer(Modifier.height(16.dp))
         val faqs = listOf(
@@ -310,13 +343,8 @@ fun FooterSection() {
     }
 }
 
-@Preview(
-    showBackground = true,
-    showSystemUi = true,
-    name = "Vista previa - Pantalla Principal (logueado)"
-)
+@Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
-    MainScreen(isLoggedIn = true, userName = "Alice López")
+    MainScreen(isLoggedIn = true, userName = "Alice")
 }
-
