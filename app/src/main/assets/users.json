@@ -1,21 +1,15 @@
 [
   {
-    "username": "alice",
-    "password": "password123",
-    "name": "Alice López",
-    "email": "alice@example.com"
+    "username": "jackie",
+    "password": "holahola",
+    "name": "Jackie Calfiñir",
+    "email": "ja.calfinir@duocuc.cl"
   },
   {
-    "username": "bob",
-    "password": "qwerty",
-    "name": "Bob Martínez",
-    "email": "bob@example.com"
-  },
-  {
-    "username": "carla",
-    "password": "secret",
-    "name": "Carla Fernández",
-    "email": "carla@example.com"
+    "username": "seba",
+    "password": "chaochao",
+    "name": "Seba Zanabria",
+    "email": "s.zanabria@duocuc.cl"
   }
 ]
 
