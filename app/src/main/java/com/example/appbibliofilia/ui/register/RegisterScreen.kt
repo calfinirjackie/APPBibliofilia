@@ -36,7 +36,8 @@ import kotlin.math.roundToInt
 @Composable
 fun RegisterScreen(
     onBackClick: () -> Unit,
-    onRegisterSuccess: (name: String?, email: String?) -> Unit
+    onRegisterSuccess: (name: String?, email: String?) -> Unit,
+    usersRemoteRepo: com.example.appbibliofilia.data.repository.UsersRemoteRepository? = null
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -234,17 +235,35 @@ fun RegisterScreen(
 
                     if (validation.isValid) {
                         scope.launch {
-                            delay(1000)
-                            val snackbarJob = launch {
-                                snackbarHostState.showSnackbar(
-                                    "Registro exitoso 🎉",
-                                    duration = SnackbarDuration.Short
+                            // Intentar crear usuario en remoto si se proporcionó repo
+                            var ok = true
+                            usersRemoteRepo?.let { repo ->
+                                val dto = com.example.appbibliofilia.data.remote.model.UsuarioDto(
+                                    idUsuario = 0L,
+                                    nombre = name,
+                                    correo = email,
+                                    contrasena = password,
+                                    rol = null
                                 )
+                                val res = repo.createUser(dto)
+                                if (res.isFailure) {
+                                    ok = false
+                                    snackbarHostState.showSnackbar("Error al registrar: ${res.exceptionOrNull()?.localizedMessage}")
+                                }
                             }
-                            delay(1000)
-                            snackbarJob.cancel()
-                            // pasamos name y email al onRegisterSuccess
-                            onRegisterSuccess(name, email)
+
+                            if (ok) {
+                                val snackbarJob = launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Registro exitoso 🎉",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                                delay(1000)
+                                snackbarJob.cancel()
+                                // pasamos name y email al onRegisterSuccess
+                                onRegisterSuccess(name, email)
+                            }
                         }
                     } else {
                         // si hay errores, producir vibración fuerte y animación shake

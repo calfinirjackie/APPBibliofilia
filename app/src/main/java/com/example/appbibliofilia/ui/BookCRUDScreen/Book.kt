@@ -1,4 +1,4 @@
-package com.example.appbibliofilia.ui.main
+package com.example.appbibliofilia.ui.BookCRUDScreen
 
 enum class BookFormat { FISICO, DIGITAL }
 

@@ -24,7 +24,7 @@ import com.example.appbibliofilia.ui.home.HomeScreen
 import com.example.appbibliofilia.ui.register.RegisterScreen
 import com.example.appbibliofilia.ui.loading.LoadingScreen
 import com.example.appbibliofilia.ui.main.MainScreen
-import com.example.appbibliofilia.ui.main.BooksCrudScreen
+import com.example.appbibliofilia.ui.BookCRUDScreen.BooksCrudScreen
 import com.example.appbibliofilia.data.local.SessionRepository
 import com.example.appbibliofilia.data.repository.UsersRepository
 import com.example.appbibliofilia.ui.viewmodel.MainViewModel
@@ -47,6 +47,12 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation(navController: NavHostController, appViewModel: MainViewModel = viewModel()) {
     val context = LocalContext.current
     val repo = SessionRepository(context)
+    // Instanciar TokenManager y APIs/remotes
+    val tokenManager = com.example.appbibliofilia.data.remote.TokenManager(context)
+    val userApi = com.example.appbibliofilia.data.remote.ApiConfig.createUserApi()
+    val libroApi = com.example.appbibliofilia.data.remote.ApiConfig.createLibroApi()
+    val usersRemoteRepo = com.example.appbibliofilia.data.repository.UsersRemoteRepository(userApi, tokenManager)
+    val librosRepo = com.example.appbibliofilia.data.repository.LibrosRepository(libroApi, tokenManager)
     val usersRepo = UsersRepository(context)
     val session by appViewModel.session.collectAsState()
     val loaded = remember { mutableStateOf(false) }
@@ -87,15 +93,35 @@ fun AppNavigation(navController: NavHostController, appViewModel: MainViewModel 
             HomeScreen(
                 onRegisterClick = { navController.navigate("register") },
                 onLoginAttempt = { username, password ->
-                    val user = usersRepo.findUser(username, password)
-                    user?.let { u ->
-                        appViewModel.login(name = u.name, email = u.email)
+                    // Intento de login remoto; si falla usar el repo local como fallback
+                    val remoteResult = try {
+                        usersRemoteRepo.login(username, password)
+                    } catch (e: Exception) {
+                        Result.failure<com.example.appbibliofilia.data.remote.model.UsuarioDto>(e)
+                    }
+
+                    val userRecord = if (remoteResult.isSuccess) {
+                        val usuarioDto = remoteResult.getOrNull()!!
+                        // mapear UsuarioDto a UserRecord
+                        val ur = com.example.appbibliofilia.data.model.UserRecord(
+                            username = username,
+                            password = password,
+                            name = usuarioDto.nombre.takeIf { it.isNotBlank() },
+                            email = usuarioDto.correo.takeIf { it.isNotBlank() }
+                        )
+                        // actualizar sesión
+                        appViewModel.login(name = ur.name, email = ur.email)
                         navController.navigate("main") {
                             popUpTo("home") { inclusive = true }
                             launchSingleTop = true
                         }
+                        ur
+                    } else {
+                        // fallback a repo local (assets)
+                        usersRepo.findUser(username, password)
                     }
-                    user
+
+                    userRecord
                 }
             )
         }
@@ -122,13 +148,14 @@ fun AppNavigation(navController: NavHostController, appViewModel: MainViewModel 
                         popUpTo("home") { inclusive = true }
                         launchSingleTop = true
                     }
-                }
+                },
+                usersRemoteRepo = usersRemoteRepo
             )
         }
 
         // Nueva ruta para el CRUD de libros
         composable("books") {
-            BooksCrudScreen(onBack = { navController.popBackStack() })
+            BooksCrudScreen(librosRepo = librosRepo, onBack = { navController.popBackStack() })
         }
     }
 }

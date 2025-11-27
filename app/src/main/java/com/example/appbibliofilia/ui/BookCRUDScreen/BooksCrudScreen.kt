@@ -1,4 +1,4 @@
-package com.example.appbibliofilia.ui.main
+package com.example.appbibliofilia.ui.BookCRUDScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,19 +22,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.appbibliofilia.data.repository.LibrosRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BooksCrudScreen(viewModel: BooksViewModel = viewModel(), onBack: () -> Unit = {}) {
+fun BooksCrudScreen(
+    librosRepo: LibrosRepository? = null,
+    viewModelParam: BooksViewModel? = null,
+    onBack: () -> Unit = {}
+) {
+    val booksViewModel: BooksViewModel = viewModelParam ?: viewModel<BooksViewModel>(factory = BooksViewModelFactory(librosRepo))
     var name by remember { mutableStateOf(TextFieldValue("")) }
     var author by remember { mutableStateOf(TextFieldValue("")) }
     var selectedFormat by remember { mutableStateOf<BookFormat?>(null) }
     var dropdownExpanded by remember { mutableStateOf(false) }
-    val editingId = viewModel.editingId
+    val editingId = booksViewModel.editingId
 
     LaunchedEffect(editingId) {
         if (editingId != null) {
-            viewModel.getBook(editingId)?.let { b ->
+            booksViewModel.getBook(editingId)?.let { b ->
                 name = TextFieldValue(b.name)
                 author = TextFieldValue(b.author)
                 selectedFormat = b.format
@@ -133,10 +139,10 @@ fun BooksCrudScreen(viewModel: BooksViewModel = viewModel(), onBack: () -> Unit 
                     Button(onClick = {
                         val fmt = selectedFormat ?: BookFormat.FISICO
                         if (editingId != null) {
-                            viewModel.updateBook(editingId, name.text.trim(), author.text.trim(), fmt)
-                            viewModel.stopEditing()
+                            booksViewModel.updateBook(editingId, name.text.trim(), author.text.trim(), fmt)
+                            booksViewModel.stopEditing()
                         } else {
-                            viewModel.addBook(name.text.trim(), author.text.trim(), fmt)
+                            booksViewModel.addBook(name.text.trim(), author.text.trim(), fmt)
                         }
                         // limpiar
                         name = TextFieldValue("")
@@ -150,7 +156,7 @@ fun BooksCrudScreen(viewModel: BooksViewModel = viewModel(), onBack: () -> Unit 
                         name = TextFieldValue("")
                         author = TextFieldValue("")
                         selectedFormat = null
-                        viewModel.stopEditing()
+                        booksViewModel.stopEditing()
                     }) {
                         Text("Limpiar")
                     }
@@ -162,7 +168,7 @@ fun BooksCrudScreen(viewModel: BooksViewModel = viewModel(), onBack: () -> Unit 
                 Spacer(Modifier.height(8.dp))
                 HorizontalDivider()
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    items(viewModel.books, key = { it.id }) { book ->
+                    items(booksViewModel.books, key = { it.id }) { book ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -184,10 +190,10 @@ fun BooksCrudScreen(viewModel: BooksViewModel = viewModel(), onBack: () -> Unit 
                                         color = Color(0xFF5A5A5A))
                                 }
                                 Row {
-                                    IconButton(onClick = { viewModel.startEditing(book.id) }) {
+                                    IconButton(onClick = { booksViewModel.startEditing(book.id) }) {
                                         Icon(Icons.Filled.Edit, contentDescription = "Editar")
                                     }
-                                    IconButton(onClick = { viewModel.deleteBook(book.id) }) {
+                                    IconButton(onClick = { booksViewModel.deleteBook(book.id) }) {
                                         Icon(Icons.Filled.Delete, contentDescription = "Eliminar")
                                     }
                                 }
