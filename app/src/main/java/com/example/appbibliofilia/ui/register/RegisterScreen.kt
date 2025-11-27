@@ -58,7 +58,7 @@ fun RegisterScreen(
     val haptic = LocalHapticFeedback.current
 
     // Vibrator para una vibración más fuerte y controlada
-    val vibrator = remember { context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator }
+    val vibrator = remember { context.getSystemService(Vibrator::class.java) }
 
     // Animación de shake: offset horizontal en pixeles
     val density = LocalDensity.current
@@ -77,7 +77,12 @@ fun RegisterScreen(
                 } catch (e: Throwable) {
                     // fallback
                     try {
-                        v.vibrate(300)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            v.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
+                        } else {
+                            @Suppress("DEPRECATION")
+                            v.vibrate(300)
+                        }
                     } catch (_: Throwable) {
                     }
                 }
