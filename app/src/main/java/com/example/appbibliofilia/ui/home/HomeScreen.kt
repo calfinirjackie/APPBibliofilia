@@ -122,7 +122,7 @@ fun HomeScreen(
                     homeViewModel.updateUsername(it)
                     homeViewModel.clearError()
                 },
-                label = { Text("Usuario") },
+                label = { Text("Correo") },
                 modifier = Modifier.fillMaxWidth()
             )
 
