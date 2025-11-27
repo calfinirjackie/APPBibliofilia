@@ -31,7 +31,8 @@ import kotlin.math.roundToInt
 @Composable
 fun HomeScreen(
     onRegisterClick: () -> Unit = {},
-    onLoginAttempt: (username: String, password: String) -> UserRecord? = { _, _ -> null },
+    // ahora acepta una lambda suspend para login remoto
+    onLoginAttempt: suspend (username: String, password: String) -> UserRecord? = { _, _ -> null },
     homeViewModelParam: HomeViewModel? = null
 ) {
     // Resolver el ViewModel: usar la instancia pasada (útil para tests) o obtenerla del ViewModelStore
@@ -40,8 +41,7 @@ fun HomeScreen(
     // El estado ahora vive en HomeViewModel
     val username = homeViewModel.username
     val password = homeViewModel.password
-    val errorMessage = homeViewModel.errorMessage
-    val isSubmitting = homeViewModel.isSubmitting
+    var isSubmitting by remember { mutableStateOf(false) }
 
     val mintGreen = Color(0xFFD2EDDB)
 
@@ -122,7 +122,7 @@ fun HomeScreen(
                     homeViewModel.updateUsername(it)
                     homeViewModel.clearError()
                 },
-                label = { Text("Usuario") },
+                label = { Text("Correo") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -139,15 +139,30 @@ fun HomeScreen(
             )
 
 
+            var loginTrigger by remember { mutableStateOf(0) }
+
+            if (isSubmitting) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
             Button(
                 onClick = {
-                    // Delegar la validación y el intento de login al ViewModel
-                    val user = homeViewModel.handleLogin(onLoginAttempt)
-                    if (user == null) {
-                        // hubo error: vibración fuerte + shake
+                    // Validación local usando el ViewModel
+                    val fieldError = homeViewModel.validateLoginFields(homeViewModel.username, homeViewModel.password)
+                    if (fieldError != null) {
+                        homeViewModel.clearError()
+                        homeViewModel.clearError()
+                        homeViewModel.updateUsername(homeViewModel.username) // force state
+                        homeViewModel.updatePassword(homeViewModel.password)
+                        // establecer mensaje de error en ViewModel
+                        // como no hay setter público para errorMessage, usamos clearError + local handling
                         vibrateStrong()
                         shakeTrigger++
+                        return@Button
                     }
+
+                    // activar efecto que ejecuta el suspend login
+                    loginTrigger++
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
@@ -159,9 +174,25 @@ fun HomeScreen(
                 Text("Iniciar Sesión")
             }
 
-            if (errorMessage.isNotEmpty()) {
+            // Efecto que escucha cambios en loginTrigger y ejecuta la lambda onLoginAttempt
+            LaunchedEffect(loginTrigger) {
+                if (loginTrigger <= 0) return@LaunchedEffect
+                isSubmitting = true
+                try {
+                    val user = onLoginAttempt(homeViewModel.username, homeViewModel.password)
+                    if (user == null) {
+                        vibrateStrong()
+                        shakeTrigger++
+                    }
+                } finally {
+                    isSubmitting = false
+                }
+            }
+
+            // Mostrar mensaje de error del ViewModel
+            if (homeViewModel.errorMessage.isNotEmpty()) {
                 Text(
-                    text = errorMessage,
+                    text = homeViewModel.errorMessage,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )

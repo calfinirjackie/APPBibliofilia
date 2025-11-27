@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 @Composable
-fun MainScreen(isLoggedIn: Boolean = false, userName: String? = null, onLogout: (() -> Unit)? = null) {
+fun MainScreen(isLoggedIn: Boolean = false, userName: String? = null, onLogout: (() -> Unit)? = null, onOpenBooks: (() -> Unit)? = null) {
     val scrollState = rememberScrollState()
 
     Surface(
@@ -39,7 +39,7 @@ fun MainScreen(isLoggedIn: Boolean = false, userName: String? = null, onLogout: 
                 .fillMaxSize()
         ) {
             HeaderSection(isLoggedIn = isLoggedIn, userName = userName, onLogout = onLogout)
-            HeroSection()
+            HeroSection(onOpenBooks = onOpenBooks)
             HowItWorksSection()
             FAQSection()
             FooterSection()
@@ -147,7 +147,7 @@ fun HeaderSection(isLoggedIn: Boolean = false, userName: String? = null, onLogou
 }
 
 @Composable
-fun HeroSection() {
+fun HeroSection(onOpenBooks: (() -> Unit)? = null) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -178,15 +178,27 @@ fun HeroSection() {
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = { /* TODO */ },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFBFE3D0),
-                contentColor = Color(0xFF2B2B2B)
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Escríbenos")
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(
+                onClick = { /* TODO */ },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFBFE3D0),
+                    contentColor = Color(0xFF2B2B2B)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Escríbenos")
+            }
+            Button(
+                onClick = { onOpenBooks?.invoke() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFBFE3D0),
+                    contentColor = Color(0xFF2B2B2B)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Mis libros")
+            }
         }
     }
 }

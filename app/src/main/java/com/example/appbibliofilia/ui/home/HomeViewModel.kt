@@ -68,7 +68,7 @@ class HomeViewModel : ViewModel() {
     // Validadores (movidos aquí para encapsular la lógica)
     // --------------------------------------------
 
-    private fun validateLoginFields(username: String, password: String): String? {
+    fun validateLoginFields(username: String, password: String): String? {
         return if (username.isBlank() || password.isBlank()) {
             "Por favor completa todos los campos"
         } else null

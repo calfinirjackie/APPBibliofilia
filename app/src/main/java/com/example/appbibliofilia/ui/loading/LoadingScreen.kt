@@ -2,6 +2,8 @@ package com.example.appbibliofilia.ui.loading
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +39,7 @@ fun LoadingScreen(onTimeout: () -> Unit) {
         }
         .build()
 
-    // 🔹 Surface con fondo negro
+
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -57,6 +59,20 @@ fun LoadingScreen(onTimeout: () -> Unit) {
                 contentDescription = "Pantalla de carga",
                 modifier = Modifier.fillMaxSize()
             )
+
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp)
+            ) {
+                TextButton(
+                    onClick = { onTimeout() },
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
+                    Text(text = "Skip")
+                }
+            }
         }
     }
 }
@@ -66,4 +82,3 @@ fun LoadingScreen(onTimeout: () -> Unit) {
 fun LoadingScreenPreview() {
     LoadingScreen(onTimeout = {})
 }
-

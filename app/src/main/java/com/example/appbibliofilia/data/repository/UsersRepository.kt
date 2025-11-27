@@ -33,6 +33,6 @@ class UsersRepository(private val context: Context, private val assetFileName: S
     }
 
     fun findUser(username: String, password: String): UserRecord? {
-        return loadAll().firstOrNull { it.username == username && it.password == password }
+        return loadAll().firstOrNull { (it.username == username || it.email == username) && it.password == password }
     }
 }
