@@ -56,7 +56,7 @@ fun BooksCrudScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CRUD de Libros") },
+                title = { Text("BiblioGestión") },
                 navigationIcon = {
                     IconButton(onClick = { onBack() }) {
                         Icon(
@@ -77,7 +77,7 @@ fun BooksCrudScreen(
                     .background(Color(0xFFFFF7F0)),
                 verticalArrangement = Arrangement.Top
             ) {
-                Text("Formulario", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Integra tu libro", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = name,
