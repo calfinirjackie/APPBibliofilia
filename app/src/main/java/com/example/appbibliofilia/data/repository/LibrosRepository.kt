@@ -4,6 +4,8 @@ import com.example.appbibliofilia.data.remote.TokenManager
 import com.example.appbibliofilia.data.remote.api.LibroApiService
 import com.example.appbibliofilia.ui.BookCRUDScreen.Book
 import com.example.appbibliofilia.ui.BookCRUDScreen.BookFormat
+import com.example.appbibliofilia.data.remote.model.toBook
+import com.example.appbibliofilia.data.remote.model.toLibroDto
 
 class LibrosRepository(
     private val api: LibroApiService,
@@ -15,29 +17,6 @@ class LibrosRepository(
         return Result.success("Bearer $token")
     }
 
-    private fun dtoToBook(dto: com.example.appbibliofilia.data.remote.model.LibroDto): Book {
-        val format = when (dto.formato?.uppercase()) {
-            "FISICO" -> BookFormat.FISICO
-            "DIGITAL" -> BookFormat.DIGITAL
-            else -> BookFormat.DIGITAL
-        }
-        return Book(id = dto.id, name = dto.titulo, author = dto.autor, format = format)
-    }
-
-    private fun bookToDto(book: Book): com.example.appbibliofilia.data.remote.model.LibroDto {
-        return com.example.appbibliofilia.data.remote.model.LibroDto(
-            id = book.id,
-            titulo = book.name,
-            autor = book.author,
-            paginas = null,
-            isbn = null,
-            formato = when (book.format) {
-                BookFormat.FISICO -> "FISICO"
-                BookFormat.DIGITAL -> "DIGITAL"
-            }
-        )
-    }
-
     suspend fun getLibros(): Result<List<Book>> {
         return try {
             val headerRes = authHeader()
@@ -45,7 +24,7 @@ class LibrosRepository(
             val resp = api.getLibros(headerRes.getOrThrow())
             if (resp.isSuccessful) {
                 val dtoList = resp.body() ?: emptyList()
-                Result.success(dtoList.map { dtoToBook(it) })
+                Result.success(dtoList.map { it.toBook() })
             } else {
                 Result.failure(Exception("Get libros failed: ${resp.code()}"))
             }
@@ -58,11 +37,11 @@ class LibrosRepository(
     suspend fun crearLibro(book: Book): Result<Book> {
         return try {
             val header = authHeader().getOrThrow()
-            val dto = bookToDto(book)
+            val dto = book.toLibroDto()
             val resp = api.crearLibro(header, dto)
             if (resp.isSuccessful) {
                 val body = resp.body() ?: return Result.failure(Exception("Empty body"))
-                Result.success(dtoToBook(body))
+                Result.success(body.toBook())
             } else Result.failure(Exception("Crear libro failed: ${resp.code()}"))
         } catch (e: Exception) {
             Result.failure(e)
@@ -72,11 +51,11 @@ class LibrosRepository(
     suspend fun actualizarLibro(book: Book): Result<Book> {
         return try {
             val header = authHeader().getOrThrow()
-            val dto = bookToDto(book)
+            val dto = book.toLibroDto()
             val resp = api.actualizarLibro(header, book.id, dto)
             if (resp.isSuccessful) {
                 val body = resp.body() ?: return Result.failure(Exception("Empty body"))
-                Result.success(dtoToBook(body))
+                Result.success(body.toBook())
             } else Result.failure(Exception("Actualizar libro failed: ${resp.code()}"))
         } catch (e: Exception) {
             Result.failure(e)

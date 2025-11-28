@@ -1,14 +1,13 @@
 package com.example.appbibliofilia.ui.BookCRUDScreen
 
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.appbibliofilia.data.repository.LibrosRepository
 import kotlinx.coroutines.launch
 
+@Suppress("unused") // algunos miembros pueden no usarse aún desde otras pantallas/tests
 class BooksViewModel(private val repo: LibrosRepository? = null) : ViewModel() {
     private val _books = mutableStateListOf<Book>()
     val books: List<Book> get() = _books
@@ -55,8 +54,8 @@ class BooksViewModel(private val repo: LibrosRepository? = null) : ViewModel() {
         }
     }
 
-    fun addBook(name: String, author: String, format: BookFormat) {
-        val book = Book(id = nextId++, name = name, author = author, format = format)
+    fun addBook(name: String, author: String, format: BookFormat, pages: Int = 0, isbn: String = "") {
+        val book = Book(id = nextId++, name = name, author = author, format = format, pages = pages, isbn = isbn)
         _books.add(0, book)
         // intentar crear en remoto si hay repo
         repo?.let { r ->
@@ -70,10 +69,10 @@ class BooksViewModel(private val repo: LibrosRepository? = null) : ViewModel() {
         }
     }
 
-    fun updateBook(id: Long, name: String, author: String, format: BookFormat) {
+    fun updateBook(id: Long, name: String, author: String, format: BookFormat, pages: Int = 0, isbn: String = "") {
         val index = _books.indexOfFirst { it.id == id }
         if (index >= 0) {
-            val updated = Book(id = id, name = name, author = author, format = format)
+            val updated = Book(id = id, name = name, author = author, format = format, pages = pages, isbn = isbn)
             _books[index] = updated
             repo?.let { r ->
                 viewModelScope.launch {

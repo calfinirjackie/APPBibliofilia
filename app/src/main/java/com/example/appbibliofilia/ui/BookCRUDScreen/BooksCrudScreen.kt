@@ -34,6 +34,8 @@ fun BooksCrudScreen(
     val booksViewModel: BooksViewModel = viewModelParam ?: viewModel<BooksViewModel>(factory = BooksViewModelFactory(librosRepo))
     var name by remember { mutableStateOf(TextFieldValue("")) }
     var author by remember { mutableStateOf(TextFieldValue("")) }
+    var pagesText by remember { mutableStateOf(TextFieldValue("")) }
+    var isbn by remember { mutableStateOf(TextFieldValue("")) }
     var selectedFormat by remember { mutableStateOf<BookFormat?>(null) }
     var dropdownExpanded by remember { mutableStateOf(false) }
     val editingId = booksViewModel.editingId
@@ -44,12 +46,16 @@ fun BooksCrudScreen(
                 name = TextFieldValue(b.name)
                 author = TextFieldValue(b.author)
                 selectedFormat = b.format
+                pagesText = TextFieldValue(if (b.pages > 0) b.pages.toString() else "")
+                isbn = TextFieldValue(b.isbn)
             }
         } else {
             name = TextFieldValue("")
             author = TextFieldValue("")
             selectedFormat = null
             dropdownExpanded = false
+            pagesText = TextFieldValue("")
+            isbn = TextFieldValue("")
         }
     }
 
@@ -135,19 +141,43 @@ fun BooksCrudScreen(
                 }
 
                 Spacer(Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = pagesText,
+                    onValueChange = { pagesText = it },
+                    label = { Text("Páginas") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = isbn,
+                    onValueChange = { isbn = it },
+                    label = { Text("ISBN") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = {
                         val fmt = selectedFormat ?: BookFormat.FISICO
+                        // parsear páginas, usar 0 si inválido
+                        val pagesInt = pagesText.text.trim().toIntOrNull() ?: 0
                         if (editingId != null) {
-                            booksViewModel.updateBook(editingId, name.text.trim(), author.text.trim(), fmt)
+                            booksViewModel.updateBook(editingId, name.text.trim(), author.text.trim(), fmt, pagesInt, isbn.text.trim())
                             booksViewModel.stopEditing()
                         } else {
-                            booksViewModel.addBook(name.text.trim(), author.text.trim(), fmt)
+                            booksViewModel.addBook(name.text.trim(), author.text.trim(), fmt, pagesInt, isbn.text.trim())
                         }
                         // limpiar
                         name = TextFieldValue("")
                         author = TextFieldValue("")
                         selectedFormat = null
+                        pagesText = TextFieldValue("")
+                        isbn = TextFieldValue("")
                     }, enabled = name.text.isNotBlank() && author.text.isNotBlank()) {
                         Text(if (editingId != null) "Actualizar" else "Agregar")
                     }
@@ -157,6 +187,8 @@ fun BooksCrudScreen(
                         author = TextFieldValue("")
                         selectedFormat = null
                         booksViewModel.stopEditing()
+                        pagesText = TextFieldValue("")
+                        isbn = TextFieldValue("")
                     }) {
                         Text("Limpiar")
                     }
@@ -188,6 +220,12 @@ fun BooksCrudScreen(
                                     Text("Autor: ${book.author}", color = Color(0xFF5A5A5A))
                                     Text("Formato: ${if (book.format == BookFormat.FISICO) "Físico" else "Digital"}",
                                         color = Color(0xFF5A5A5A))
+                                    if (book.pages > 0) {
+                                        Text("Páginas: ${book.pages}", color = Color(0xFF5A5A5A))
+                                    }
+                                    if (book.isbn.isNotBlank()) {
+                                        Text("ISBN: ${book.isbn}", color = Color(0xFF5A5A5A))
+                                    }
                                 }
                                 Row {
                                     IconButton(onClick = { booksViewModel.startEditing(book.id) }) {
