@@ -42,9 +42,9 @@ android {
 dependencies {
 // permite escribir codigo mas compacto con kotlin
     implementation(libs.androidx.core.ktx)
-    //
+    //maneja el ciclo de vida de la Activity y los ViewModel, para que tareas en segundo plano, se controlen automáticamente
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    // Hace posible que el Activity mueestre la UI hecha con
+    // Hace posible que el Activity muestre la UI hecha con Compose
     implementation(libs.androidx.activity.compose)
     // mantiene las versiones Compose ordenadas y sincronizadas
     implementation(platform(libs.androidx.compose.bom))
@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.androidx.material3)
     //para las pruebas unitarias
     testImplementation(libs.junit)
-    //para las pruebas instrumentadas de ANDROID
+    //para las pruebas instrumentadas de ANDROID que requieran el emulador
     androidTestImplementation(libs.androidx.junit)
     //Pruebas de UI clásicas, que muestre "haz clic en este boton" y cosas asi
     androidTestImplementation(libs.androidx.espresso.core)
@@ -82,7 +82,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     // Librería de red que usa Retrofit por debajo, muestra en el logcat las peticiones y respuestas HTTP
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    // Permiten hacer tareas en segundo plato sin bloquear la UI (llamadas a API, DB, etc)
+    // Permiten hacer tareas en segundo plano sin bloquear la UI (llamadas a API, DB, etc)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
 
